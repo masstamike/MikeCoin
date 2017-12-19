@@ -62,13 +62,16 @@ func Gossip () {
 		b := new(bytes.Buffer)
 		json.NewEncoder(b).Encode(append(myPeers, selfState))
 		resp, err := http.Post(peerUrl, "application/json", b)
-		if err != nil {
-			fmt.Println(err.Error())
+		if err != nil || resp.Status != "200 OK" {
+			myPeers[p].Port = 0
+		} else {
+			var otherPeers []peer
+			json.NewDecoder(resp.Body).Decode(&otherPeers)
+			updatePeers(otherPeers)
 		}
-		var otherPeers []peer
-		json.NewDecoder(resp.Body).Decode(&otherPeers)
-		updatePeers(otherPeers)
 	}
+
+	myPeers = squashPeers(myPeers)
 }
 
 func HandleGossip (w http.ResponseWriter, r *http.Request) {
@@ -107,4 +110,15 @@ func updatePeers (otherPeers []peer) {
 			myPeers = append(myPeers, otherPeers[p])
 		}
 	}
+}
+
+func squashPeers (peers []peer) []peer {
+	alivePeers := make([]peer, 0)
+	for p := range peers {
+		if peers[p].Port != 0 {
+			alivePeers = append(alivePeers, peers[p])
+		}
+	}
+
+	return alivePeers
 }
