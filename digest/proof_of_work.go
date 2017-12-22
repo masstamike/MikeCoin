@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-const NUM_ZEROES = 6
+const NUM_ZEROES = 5
 
 type nonceError struct {
 	e string
@@ -18,7 +18,7 @@ func (n nonceError) Error() string {
 	return n.e
 }
 
-func hash (s string) string {
+func Hash (s string) string {
 	sum := sha256.Sum256([]byte(s))
 	return hex.EncodeToString(sum[:])
 }
@@ -43,7 +43,7 @@ func FindNonce (s string) (string, error) {
 }
 
 func ValidNonce (nonce string, message string) bool {
-	messageNonceHash := hash(message + nonce)
+	messageNonceHash := Hash(message + nonce)
 	splitSum := strings.Split(messageNonceHash, "")
 	for char := range splitSum[:NUM_ZEROES] {
 		if splitSum[char] != "0" {
